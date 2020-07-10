@@ -1,0 +1,59 @@
+{
+    "name": "aiida-catmap",
+    "author": "Sudarshan Vijay",
+    "author_email": "vijays@fysik.dtu.dk",
+    "description": "AiiDA package that interfaces with Kinetic modelling code CatMAP",
+    "url": "https://github.com/sudarshanv01/aiida-catmap",
+    "license": "MIT",
+    "classifiers": [
+        "Programming Language :: Python",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Framework :: AiiDA"
+    ],
+    "version": "0.1.0a0",
+    "entry_points": {
+        "aiida.data": [
+            "catmap = aiida_catmap.data:DiffParameters"
+        ],
+        "aiida.calculations": [
+            "catmap = aiida_catmap.calculations:DiffCalculation"
+        ],
+        "aiida.parsers": [
+            "catmap = aiida_catmap.parsers:DiffParser"
+        ],
+        "aiida.cmdline.data": [
+            "catmap = aiida_catmap.cli:data_cli"
+        ]
+    },
+    "include_package_data": true,
+    "setup_requires": ["reentry"],
+    "reentry_register": true,
+    "install_requires": [
+        "aiida-core>=1.1.0,<2.0.0",
+        "six",
+        "voluptuous"
+    ],
+    "extras_require": {
+        "testing": [
+            "pgtest~=1.3.1",
+            "wheel~=0.31",
+            "coverage",
+            "pytest~=3.6,<5.0.0",
+            "pytest-cov"
+        ],
+        "pre-commit": [
+            "astroid==2.2.5",
+            "pre-commit==1.20.0",
+            "prospector==1.1.7",
+            "pylint==2.3.1"
+        ],
+        "docs": [
+            "sphinx",
+            "sphinxcontrib-contentui",
+            "sphinxcontrib-details-directive; python_version>='3.0'",
+            "sphinx-rtd-theme"
+        ]
+    }
+}
