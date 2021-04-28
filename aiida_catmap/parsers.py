@@ -6,7 +6,7 @@ Register parsers via the "aiida.parsers" entry point in setup.json.
 from aiida.engine import ExitCode
 from aiida.parsers.parser import Parser
 from aiida.plugins import CalculationFactory
-
+import pickle
 
 class CatMAPParser(Parser):
     """
@@ -24,22 +24,20 @@ class CatMAPParser(Parser):
         """
         from aiida.common import exceptions
         super(CatMAPParser, self).__init__(node)
-        if not issubclass(node.process_class, CatMAPParser):
-            raise exceptions.ParsingError("Can only parse CatMAP output")
 
     def parse(self, **kwargs):
         """
         Parse outputs, store results in database.
-
         :returns: an exit code, if parsing fails (or nothing if parsing succeeds)
         """
-        from aiida.orm import SinglefileData
+        from aiida.orm import SinglefileData, List
 
         output_filename = self.node.get_option('output_filename')
+        pickle_filename = self.node.inputs.data_file.value
 
         # Check that folder content is as expected
         files_retrieved = self.retrieved.list_object_names()
-        files_expected = [output_filename]
+        files_expected = [output_filename, pickle_filename]
         # Note: set(A) <= set(B) checks whether A is a subset of B
         if not set(files_expected) <= set(files_retrieved):
             self.logger.error("Found files '{}', expected to find '{}'".format(
@@ -50,6 +48,23 @@ class CatMAPParser(Parser):
         self.logger.info("Parsing '{}'".format(output_filename))
         with self.retrieved.open(output_filename, 'rb') as handle:
             output_node = SinglefileData(file=handle)
-        self.out('catmap', output_node)
+        self.out('log', output_node)
 
-        return ExitCode(0)
+        # Parsing the pickle file
+        self.logger.info("Parsing '{}'".format(pickle_filename))
+        pickledata = pickle.load(self.retrieved.open(pickle_filename, 'rb'))
+        try:
+            coverage_data = [ [a[0], list(map(float, a[1]))]  for a in pickledata['coverage_map'] ]
+        except KeyError:
+            return self.exit_codes.ERROR_NO_PICKLE_FILE
+
+        rate_data = [ [a[0], list(map(float, a[1]))]  for a in pickledata['rate_map'] ]
+        production_data = [ [a[0], list(map(float, a[1]))]  for a in pickledata['production_rate_map'] ]
+
+        coverage_map = List(list=coverage_data)
+        rate_map = List(list=rate_data)
+        production_map = List(list=production_data)
+
+        self.out('coverage_map', coverage_map)
+        self.out('rate_map', rate_map)
+        self.out('production_rate_map', production_map)
