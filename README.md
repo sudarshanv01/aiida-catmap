@@ -7,6 +7,8 @@
 
 AiiDA plugin which interfaces with the descriptor based analysis code CatMAP. 
 
+For more information about CatMAP itself visit: https://catmap.readthedocs.io/en/latest/
+
 
 ## Features
 Allows running of CatMAP through the AiiDA interface, so far only the following have been implemented
