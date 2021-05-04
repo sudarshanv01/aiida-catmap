@@ -17,8 +17,6 @@ class CatMAPParser(Parser):
         """
         Initialize Parser instance
 
-        Checks that the ProcessNode being passed was produced by a DiffCalculation.
-
         :param node: ProcessNode of calculation
         :param type node: :class:`aiida.orm.ProcessNode`
         """
@@ -58,13 +56,19 @@ class CatMAPParser(Parser):
         except KeyError:
             return self.exit_codes.ERROR_NO_PICKLE_FILE
 
+        ## Choose not to change the mpmath format
+        ## the downside is that mpmath must then be present 
+        ## wherever this is being parsed
         rate_data = [ [a[0], list(map(float, a[1]))]  for a in pickledata['rate_map'] ]
         production_data = [ [a[0], list(map(float, a[1]))]  for a in pickledata['production_rate_map'] ]
 
         coverage_map = List(list=coverage_data)
         rate_map = List(list=rate_data)
         production_map = List(list=production_data)
-
+        
+        ## The three main outputs
+        ## The solution to the kinetic model - coverages
+        ## The rate and the production rate also provided
         self.out('coverage_map', coverage_map)
         self.out('rate_map', rate_map)
         self.out('production_rate_map', production_map)

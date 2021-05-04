@@ -18,10 +18,10 @@
             "catmap = aiida_catmap.data:DiffParameters"
         ],
         "aiida.calculations": [
-            "catmap = aiida_catmap.calculations:DiffCalculation"
+            "catmap = aiida_catmap.calculations:CatMAPCalculation"
         ],
         "aiida.parsers": [
-            "catmap = aiida_catmap.parsers:DiffParser"
+            "catmap = aiida_catmap.parsers:CatMAPParser"
         ],
         "aiida.cmdline.data": [
             "catmap = aiida_catmap.cli:data_cli"

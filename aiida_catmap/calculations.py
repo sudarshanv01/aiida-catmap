@@ -1,19 +1,17 @@
 """
 Calculations provided by aiida_catmap.
-
-Register calculations via the "aiida.calculations" entry point in setup.json.
 """
 from aiida.common import datastructures
 from aiida.engine import CalcJob
-from aiida.orm import SinglefileData, List, Float, Dict, Str, Int
+from aiida.orm import SinglefileData, List, Float, Dict, Str, Int, Bool
 from aiida.plugins import DataFactory
 
 
 class CatMAPCalculation(CalcJob):
     """
-    AiiDA plugin for running Descriptor based Micro-kinetic modelling 
-    code CatMAP. 
-
+    Tools to run CatMAP using AiiDa
+    CatMAP is a micro-kinetic modelling package, more information is
+    available here https://catmap.readthedocs.io/en/latest/
     """
 
     @classmethod
@@ -23,6 +21,7 @@ class CatMAPCalculation(CalcJob):
         super(CatMAPCalculation, cls).define(spec)
 
         # set default values for AiiDA-CatMAP options
+        # Right now the tool allows only serial runs this might change
         spec.inputs['metadata']['options']['resources'].default = {
                 'num_machines': 1,
                 'num_mpiprocs_per_machine': 1,
@@ -30,8 +29,11 @@ class CatMAPCalculation(CalcJob):
 
         # new ports
         ## INPUTS
-        #spec.input('run_file', valid_type=SinglefileData, help='File with instructions on how to run')
-        #spec.input('mkm_file', valid_type=SinglefileData, help='.mkm file that has all the inputs to CatMAP')
+
+        ### Decide if you are doing electrocatalysis or thermal catalysis; not a catmap input
+        spec.input('electrocatal', valid_type=Bool, help='If this is an electrocatalysis run, specify here', default=Bool(True))
+
+        ### Reaction condition keys
         spec.input('energies', valid_type=SinglefileData, help='energies.txt that stores all the energy inputs')
         spec.input('scaler', valid_type=Str, help='Scaler to be used in the Kinetic model', default=Str('GeneralizedLinearScaler'))
         spec.input('rxn_expressions', valid_type=List, help='Reactions expressions')
@@ -52,6 +54,9 @@ class CatMAPCalculation(CalcJob):
         spec.input('max_bisections', valid_type=Int, help='Maximum bisections for root finding algorithm')
         spec.input('mkm_filename', valid_type=Str, required=False, default=lambda: Str('aiida.mkm'))
         spec.input('data_file', valid_type=Str, required=False, default=lambda: Str('aiida.pickle'))
+        spec.input('ideal_gas_params', valid_type=Dict, required=False, help='Ideal gas parameters to inferface with ASE')
+
+        ### Keys for electrochemistry 
         spec.input('voltage', valid_type=Float, required=False, help='Potential on an SHE scale')
         spec.input('pH', valid_type=Float, required=False, help='pH')
         spec.input('beta', valid_type=Float, required=False, default=lambda: Float(0.5))
@@ -60,9 +65,7 @@ class CatMAPCalculation(CalcJob):
         spec.input('voltage_diff_drop', valid_type=Float, required=False, default=lambda: Float(0.0))
         spec.input('sigma_input', valid_type=List, required=False, default=lambda: List(list=['CH', 0]))
         spec.input('Upzc', valid_type=Float, required=False, default=lambda : Float(0.0))
-        spec.input('ideal_gas_params', valid_type=Dict, required=False, help='Ideal gas parameters to inferface with ASE')
 
-        #Pickle file name is chosen automatically 
         ## METADATA
         spec.inputs['metadata']['options']['parser_name'].default = 'catmap'
         spec.inputs['metadata']['options']['input_filename'].default = 'mkm_job.py'
@@ -89,7 +92,8 @@ class CatMAPCalculation(CalcJob):
 
         # set up the mkm file 
         with folder.open(self.inputs.mkm_filename.value, 'w', encoding='utf8') as handle:
-            # Writing the reaction conditions 
+
+            ## Writing the reaction conditions 
             handle.write("scaler = '{s}' \n".format(s=self.inputs.scaler.value))
             handle.write('rxn_expressions = {l} \n'.format(l=self.inputs.rxn_expressions.get_list()))
             handle.write('surface_names = {l} \n'.format(l=self.inputs.surface_names.get_list()))
@@ -102,31 +106,32 @@ class CatMAPCalculation(CalcJob):
             handle.write("input_file = '{s}' \n".format(s=self.inputs.energies.filename))
             handle.write("gas_thermo_mode = '{s}' \n".format(s=self.inputs.gas_thermo_mode.value))
             handle.write("adsorbate_thermo_mode = '{s}' \n".format(s=self.inputs.adsorbate_thermo_mode.value))
-            if self.inputs.scaler.value == 'GeneralizedLinearScaler':
-                handle.write('scaling_constraint_dict = {d} \n'.format(d=self.inputs.scaling_constraint_dict.get_dict()))
-                handle.write('voltage = {f} \n'.format(f=self.inputs.voltage.value)) 
-                handle.write('pH = {f} \n'.format(f=self.inputs.pH.value))
+            handle.write('ideal_gas_params = {d} \n'.format(d=self.inputs.ideal_gas_params.get_dict()))
 
+            ## Only related to electrochemistry
+            if self.inputs.electrocatal.value == True:
+                if self.inputs.scaler.value == 'GeneralizedLinearScaler':
+                    handle.write('scaling_constraint_dict = {d} \n'.format(d=self.inputs.scaling_constraint_dict.get_dict()))
+                    handle.write('voltage = {f} \n'.format(f=self.inputs.voltage.value)) 
+                    handle.write('pH = {f} \n'.format(f=self.inputs.pH.value))
+
+                elif self.inputs.scaler.value != 'GeneralizedLinearScaler':
+                    handle.write("potential_reference_scale = '{s}' \n".format(s=self.inputs.potential_reference_scale.value))
+                    handle.write('extrapolated_potential = {f} \n'.format(f=self.inputs.extrapolated_potential.value))
+                    handle.write('voltage_diff_drop = {f} \n'.format(f=self.inputs.voltage_diff_drop.value))
+                    handle.write('sigma_input = {l} \n'.format(l=self.inputs.sigma_input.get_list()))
+                    handle.write('Upzc = {f} \n'.format(f=self.inputs.Upzc.value))
+
+                handle.write('beta = {f} \n'.format(f=self.inputs.beta.value))
+                for val in self.inputs.electrochemical_thermo_mode.get_list():
+                    handle.write("electrochemical_thermo_mode = '{s}' \n".format(s=val))
+
+            ## Write numerical data last
             handle.write('decimal_precision = {i} \n'.format(i=self.inputs.decimal_precision.value))
             handle.write('tolerance = {f} \n'.format(f=self.inputs.tolerance.value))
             handle.write('max_rootfinding_iterations = {f} \n'.format(f=self.inputs.max_rootfinding_iterations.value))
             handle.write('max_bisections = {f} \n'.format(f=self.inputs.max_bisections.value))
             handle.write("numerical_solver = '{s}' \n".format(s=self.inputs.numerical_solver.value))
-
-            for val in self.inputs.electrochemical_thermo_mode.get_list():
-                handle.write("electrochemical_thermo_mode = '{s}' \n".format(s=val))
-
-            # if not self.inputs.voltage.value:
-                # Voltage has been specified 
-            handle.write('beta = {f} \n'.format(f=self.inputs.beta.value))
-            if self.inputs.scaler.value != 'GeneralizedLinearScaler':
-                handle.write("potential_reference_scale = '{s}' \n".format(s=self.inputs.potential_reference_scale.value))
-                handle.write('extrapolated_potential = {f} \n'.format(f=self.inputs.extrapolated_potential.value))
-                handle.write('voltage_diff_drop = {f} \n'.format(f=self.inputs.voltage_diff_drop.value))
-                handle.write('sigma_input = {l} \n'.format(l=self.inputs.sigma_input.get_list()))
-                handle.write('Upzc = {f} \n'.format(f=self.inputs.Upzc.value))
-
-            handle.write('ideal_gas_params = {d} \n'.format(d=self.inputs.ideal_gas_params.get_dict()))
 
 
         # write the simplest run command
@@ -139,7 +144,6 @@ class CatMAPCalculation(CalcJob):
             handle.write('model.run() \n')
 
         codeinfo = datastructures.CodeInfo()
-        
         codeinfo.code_uuid = self.inputs.code.uuid
         codeinfo.stdout_name = self.options.output_filename
         codeinfo.stdin_name = self.options.input_filename
