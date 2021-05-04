@@ -20,7 +20,7 @@ cmdline_options = {
 }
 
 
-class DiffParameters(Dict):
+class CatMAPParameters(Dict):
     """
     Command line options for diff.
 
