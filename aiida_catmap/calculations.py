@@ -31,11 +31,11 @@ class CatMAPCalculation(CalcJob):
         ## INPUTS
 
         ### Decide if you are doing electrocatalysis or thermal catalysis; not a catmap input
-        spec.input('electrocatal', valid_type=Bool, help='If this is an electrocatalysis run, specify here', default=Bool(True))
+        spec.input('electrocatal', valid_type=Bool, help='If this is an electrocatalysis run, specify here', default=lambda: Bool(True))
 
         ### Reaction condition keys
         spec.input('energies', valid_type=SinglefileData, help='energies.txt that stores all the energy inputs')
-        spec.input('scaler', valid_type=Str, help='Scaler to be used in the Kinetic model', default=Str('GeneralizedLinearScaler'))
+        spec.input('scaler', valid_type=Str, help='Scaler to be used in the Kinetic model', default=lambda: Str('GeneralizedLinearScaler'))
         spec.input('rxn_expressions', valid_type=List, help='Reactions expressions')
         spec.input('surface_names', valid_type=List, help='Surfaces to calculate with energies in energies.txt')
         spec.input('descriptor_names', valid_type=List, help='Descriptors')
@@ -45,7 +45,6 @@ class CatMAPCalculation(CalcJob):
         spec.input('species_definitions', valid_type=Dict, help='Dict consisting of all species definitions')
         spec.input('gas_thermo_mode', valid_type=Str, help='Gas thermodynamics mode')
         spec.input('adsorbate_thermo_mode', valid_type=Str, help='Adsorbate thermodyamics mode')
-        spec.input('electrochemical_thermo_mode', valid_type=List, help='Electrochemical thermodyamics mode')
         spec.input('scaling_constraint_dict', valid_type=Dict, help='Scaling constraints', required=False)
         spec.input('numerical_solver', valid_type=Str, help='Numerical solver to be used', required=False, default=lambda: Str('coverages'))
         spec.input('decimal_precision', valid_type=Int, help='Decimal precision of code')
@@ -58,6 +57,7 @@ class CatMAPCalculation(CalcJob):
 
         ### Keys for electrochemistry 
         spec.input('voltage', valid_type=Float, required=False, help='Potential on an SHE scale')
+        spec.input('electrochemical_thermo_mode', valid_type=List, help='Electrochemical thermodyamics mode', required=False)
         spec.input('pH', valid_type=Float, required=False, help='pH')
         spec.input('beta', valid_type=Float, required=False, default=lambda: Float(0.5))
         spec.input('potential_reference_scale', valid_type=Str, required=False, default=lambda: Str('SHE'))
@@ -106,12 +106,12 @@ class CatMAPCalculation(CalcJob):
             handle.write("input_file = '{s}' \n".format(s=self.inputs.energies.filename))
             handle.write("gas_thermo_mode = '{s}' \n".format(s=self.inputs.gas_thermo_mode.value))
             handle.write("adsorbate_thermo_mode = '{s}' \n".format(s=self.inputs.adsorbate_thermo_mode.value))
-            handle.write('ideal_gas_params = {d} \n'.format(d=self.inputs.ideal_gas_params.get_dict()))
+            # handle.write('ideal_gas_params = {d} \n'.format(d=self.inputs.ideal_gas_params.get_dict()))
+            handle.write('scaling_constraint_dict = {d} \n'.format(d=self.inputs.scaling_constraint_dict.get_dict()))
 
             ## Only related to electrochemistry
             if self.inputs.electrocatal.value == True:
                 if self.inputs.scaler.value == 'GeneralizedLinearScaler':
-                    handle.write('scaling_constraint_dict = {d} \n'.format(d=self.inputs.scaling_constraint_dict.get_dict()))
                     handle.write('voltage = {f} \n'.format(f=self.inputs.voltage.value)) 
                     handle.write('pH = {f} \n'.format(f=self.inputs.pH.value))
 
