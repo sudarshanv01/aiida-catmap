@@ -50,7 +50,9 @@ class CatMAPParser(Parser):
 
         # Parsing the pickle file
         self.logger.info("Parsing '{}'".format(pickle_filename))
-        pickledata = pickle.load(self.retrieved.open(pickle_filename, 'rb'))
+        # pickledata = pickle.load(self.retrieved.open(pickle_filename, 'rb'))
+        with self.retrieved.open(pickle_filename, 'rb') as handle:
+            pickledata = pickle.load(handle)
         try:
             coverage_data = [ [a[0], list(map(float, a[1]))]  for a in pickledata['coverage_map'] ]
         except KeyError:
