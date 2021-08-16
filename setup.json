@@ -12,19 +12,13 @@
         "Natural Language :: English",
         "Framework :: AiiDA"
     ],
-    "version": "0.1.0a0",
+    "version": "0.2.0a0",
     "entry_points": {
-        "aiida.data": [
-            "catmap = aiida_catmap.data:DiffParameters"
-        ],
         "aiida.calculations": [
             "catmap = aiida_catmap.calculations:CatMAPCalculation"
         ],
         "aiida.parsers": [
             "catmap = aiida_catmap.parsers:CatMAPParser"
-        ],
-        "aiida.cmdline.data": [
-            "catmap = aiida_catmap.cli:data_cli"
         ]
     },
     "include_package_data": true,
