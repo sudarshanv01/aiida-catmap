@@ -21,9 +21,7 @@
             "catmap = aiida_catmap.parsers:CatMAPParser"
         ]
     },
-    "include_package_data": true,
     "setup_requires": ["reentry"],
-    "reentry_register": true,
     "install_requires": [
         "aiida-core>=1.1.0,<2.0.0",
         "six",
@@ -31,17 +29,16 @@
     ],
     "extras_require": {
         "test": [
-            "pgtest~=1.3.1",
-            "wheel~=0.31",
+            "pgtest",
+            "wheel",
             "coverage",
-            "pytest~=3.6,<5.0.0",
-            "pytest-cov"
+            "pytest",
+            "pytest-cov",
+            "pytest-regressions"
         ],
         "pre-commit": [
-            "astroid==2.2.5",
-            "pre-commit==1.20.0",
-            "prospector==1.1.7",
-            "pylint==2.3.1"
+            "pre-commit",
+            "pylint"
         ],
         "docs": [
             "sphinx",
