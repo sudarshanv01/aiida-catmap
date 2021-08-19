@@ -15,10 +15,10 @@
     "version": "0.2.0a0",
     "entry_points": {
         "aiida.calculations": [
-            "catmap = aiida_catmap.calculations:CatMAPCalculation"
+            "catmap = aiida_catmap.calculations.catmap:CatMAPCalculation"
         ],
         "aiida.parsers": [
-            "catmap = aiida_catmap.parsers:CatMAPParser"
+            "catmap = aiida_catmap.parsers.catmap:CatMAPParser"
         ]
     },
     "setup_requires": ["reentry"],
