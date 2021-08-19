@@ -1,8 +1,3 @@
-[![Build Status](https://github.com/sudarshanv01/aiida-catmap/workflows/ci/badge.svg?branch=master)](https://github.com/sudarshanv01/aiida-catmap/actions)
-[![Coverage Status](https://coveralls.io/repos/github/sudarshanv01/aiida-catmap/badge.svg?branch=master)](https://coveralls.io/github/sudarshanv01/aiida-catmap?branch=master)
-[![Docs status](https://readthedocs.org/projects/aiida-catmap/badge)](http://aiida-catmap.readthedocs.io/)
-[![PyPI version](https://badge.fury.io/py/aiida-catmap.svg)](https://badge.fury.io/py/aiida-catmap)
-
 # aiida-catmap
 
 AiiDA plugin which interfaces with the descriptor based analysis code CatMAP. 
