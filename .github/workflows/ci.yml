@@ -72,7 +72,7 @@ jobs:
         -   name: Install python dependencies
             run: |
                 pip install --upgrade setuptools
-                pip install -e .[tests]
+                pip install -e .[test]
                 reentry scan
         -   name: Run pytest
             run:
