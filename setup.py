@@ -21,13 +21,11 @@ def setup_package():
     with open(filename_description, 'r') as handle:
         description = handle.read()
 
-    setup(
-        include_package_data=True,
-        packages=find_packages(),
-        long_description=description,
-        long_description_content_type='text/markdown',
-        **setup_json
-    )
+    setup(include_package_data=True,
+          packages=find_packages(),
+          long_description=description,
+          long_description_content_type='text/markdown',
+          **setup_json)
 
 
 if __name__ == '__main__':

@@ -23,3 +23,6 @@
     hooks:
     -   id: pylint
         language: system
+        args: [
+            '--ignore=E0012'
+        ]

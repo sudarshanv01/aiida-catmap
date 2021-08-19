@@ -1,6 +1,6 @@
 """pytest fixtures for simplified testing."""
 from __future__ import absolute_import
-import pytest
+import pytest  # pylint: disable=import-error
 pytest_plugins = ['aiida.manage.tests.pytest_fixtures']  # pylint: disable=invalid-name
 
 
